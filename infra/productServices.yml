@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productservices-deployment
+  labels:
+    app: productservices-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: productservices-deployment
+  template:
+    metadata:
+      labels:
+        app: productservices-deployment
+    spec:
+      containers:
+      - name: product-services-container
+        image: product_services:latest
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - containerPort: 5095
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: productservices-service
+spec:
+  selector:
+    app: productservices-deployment
+  ports:
+    - protocol: TCP
+      port: 5095
+      targetPort: 5095
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: productservices-ingress
+spec:
+  rules:
+  - host: localhost
+    http:
+      paths:
+      - path: /products
+        pathType: Prefix
+        backend:
+          service:
+            name: productservices-service
+            port:
+              number: 5095

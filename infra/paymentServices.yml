@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservices-deployment
+  labels:
+    app: paymentservices-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: paymentservices-deployment
+  template:
+    metadata:
+      labels:
+        app: paymentservices-deployment
+    spec:
+      containers:
+      - name: payment-services-container
+        image: payment_services:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5550
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paymentservices-service
+spec:
+  selector:
+    app: paymentservices-deployment
+  ports:
+    - protocol: TCP
+      port: 5550
+      targetPort: 5550
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: paymentservices-ingress
+spec:
+  rules:
+  - host: localhost
+    http:
+      paths:
+      - path: /payment.php
+        pathType: Prefix
+        backend:
+          service:
+            name: paymentservices-service
+            port:
+              number: 5550
